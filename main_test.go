@@ -4,121 +4,71 @@ import (
 	"testing"
 )
 
-func TestExtractPath(t *testing.T) {
+func TestRepoPath(t *testing.T) {
 	tests := []struct {
-		name    string
-		output  string
-		want    string
-		wantErr bool
+		name       string
+		repository string
+		want       string
 	}{
 		{
-			name: "clone output",
-			output: `     clone https://github.com/kotaoue/HandsOn-Docker -> /Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker
-       git clone --recursive https://github.com/kotaoue/HandsOn-Docker /Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker
-Cloning into '/Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker'...
-`,
-			want: "/Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
+			name:       "https URL",
+			repository: "https://github.com/kotaoue/HandsOn-Docker",
+			want:       "github.com/kotaoue/HandsOn-Docker",
 		},
 		{
-			name:   "exists output",
-			output: "    exists /Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker\n",
-			want:   "/Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
+			name:       "https URL with .git suffix",
+			repository: "https://github.com/kotaoue/HandsOn-Docker.git",
+			want:       "github.com/kotaoue/HandsOn-Docker",
 		},
 		{
-			name:    "unrecognized output",
-			output:  "something unexpected\n",
-			wantErr: true,
+			name:       "http URL",
+			repository: "http://github.com/kotaoue/HandsOn-Docker",
+			want:       "github.com/kotaoue/HandsOn-Docker",
 		},
 		{
-			name:    "empty output",
-			output:  "",
-			wantErr: true,
+			name:       "git@ SSH URL",
+			repository: "git@github.com:kotaoue/HandsOn-Docker.git",
+			want:       "github.com/kotaoue/HandsOn-Docker",
+		},
+		{
+			name:       "git@ SSH URL without .git",
+			repository: "git@github.com:kotaoue/HandsOn-Docker",
+			want:       "github.com/kotaoue/HandsOn-Docker",
+		},
+		{
+			name:       "git:// URL",
+			repository: "git://github.com/kotaoue/HandsOn-Docker.git",
+			want:       "github.com/kotaoue/HandsOn-Docker",
+		},
+		{
+			name:       "short form user/repo",
+			repository: "kotaoue/HandsOn-Docker",
+			want:       "kotaoue/HandsOn-Docker",
+		},
+		{
+			name:       "short form with .git",
+			repository: "kotaoue/HandsOn-Docker.git",
+			want:       "kotaoue/HandsOn-Docker",
+		},
+		{
+			name:       "empty string",
+			repository: "",
+			want:       "",
+		},
+		{
+			name:       "repo name only",
+			repository: "HandsOn-Docker",
+			want:       "HandsOn-Docker",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := extractPath(tt.output)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("extractPath() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := repoPath(tt.repository)
 			if got != tt.want {
-				t.Errorf("extractPath() = %q, want %q", got, tt.want)
+				t.Errorf("repoPath() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestParseCloneLine(t *testing.T) {
-	tests := []struct {
-		name  string
-		line  string
-		want  string
-		found bool
-	}{
-		{
-			name:  "valid clone line",
-			line:  "clone https://github.com/kotaoue/HandsOn-Docker -> /Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
-			want:  "/Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
-			found: true,
-		},
-		{
-			name:  "not a clone line",
-			line:  "exists /some/path",
-			found: false,
-		},
-		{
-			name:  "clone line missing arrow",
-			line:  "clone https://github.com/kotaoue/HandsOn-Docker",
-			found: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, ok := parseCloneLine(tt.line)
-			if ok != tt.found {
-				t.Errorf("parseCloneLine() found = %v, want %v", ok, tt.found)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("parseCloneLine() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestParseExistsLine(t *testing.T) {
-	tests := []struct {
-		name  string
-		line  string
-		want  string
-		found bool
-	}{
-		{
-			name:  "valid exists line",
-			line:  "exists /Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
-			want:  "/Users/kotaoue/ghq/github.com/kotaoue/HandsOn-Docker",
-			found: true,
-		},
-		{
-			name:  "not an exists line",
-			line:  "clone something -> /path",
-			found: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, ok := parseExistsLine(tt.line)
-			if ok != tt.found {
-				t.Errorf("parseExistsLine() found = %v, want %v", ok, tt.found)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("parseExistsLine() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
