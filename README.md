@@ -21,16 +21,6 @@ gghq <repository>
 
 `gghq` runs `ghq get` on the given repository, then prints the full local path where it was cloned.
 
-The following repository formats are supported:
-
-| Format | Example |
-|---|---|
-| HTTPS URL | `https://github.com/example/repo` |
-| HTTPS URL (`.git`) | `https://github.com/example/repo.git` |
-| SSH URL | `git@github.com:example/repo.git` |
-| git URL | `git://github.com/example/repo.git` |
-| Short form | `example/repo` |
-
 ### Examples
 
 ```sh
