@@ -6,9 +6,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    assignees:
+      - kotaoue
 
   # Go modules の自動更新
   - package-ecosystem: gomod
     directory: /
     schedule:
       interval: weekly
+    assignees:
+      - kotaoue
