@@ -8,23 +8,31 @@ import (
 	"strings"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: gghq <repository>")
-		os.Exit(1)
-	}
+var execCommand = exec.Command
 
-	path, err := getLocalPath(os.Args[1])
-	if err != nil {
+func main() {
+	if err := run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func run(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("usage: gghq <repository>")
+	}
+
+	path, err := getLocalPath(args[0])
+	if err != nil {
+		return err
+	}
 
 	fmt.Println(path)
+	return nil
 }
 
 func getLocalPath(repository string) (string, error) {
-	out, err := exec.Command("ghq", "get", repository).CombinedOutput()
+	out, err := execCommand("ghq", "get", repository).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("ghq get failed: %w\n%s", err, out)
 	}
@@ -34,7 +42,7 @@ func getLocalPath(repository string) (string, error) {
 
 // listPath uses `ghq list --full-path` to retrieve the local path for the given repository.
 func listPath(repository string) (string, error) {
-	out, err := exec.Command("ghq", "list", "--full-path", repoPath(repository)).Output()
+	out, err := execCommand("ghq", "list", "--full-path", repoPath(repository)).Output()
 	if err != nil {
 		return "", fmt.Errorf("ghq list failed: %w", err)
 	}
